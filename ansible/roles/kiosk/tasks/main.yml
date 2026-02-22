@@ -48,18 +48,19 @@
     mode: "0644"
   notify: Restart kiosk
 
-- name: Read current cmdline.txt
-  ansible.builtin.slurp:
-    src: /boot/firmware/cmdline.txt
-  register: cmdline_raw
+- name: Remove old fbcon value from cmdline.txt
+  ansible.builtin.replace:
+    path: /boot/firmware/cmdline.txt
+    regexp: '\s*fbcon=rotate:\S*'
+    replace: ''
+  changed_when: false
 
-- name: Ensure portrait boot console rotation in cmdline.txt
+- name: Append fbcon=rotate to cmdline.txt
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
-    regexp: '^(.*)$'
+    regexp: '^(.+)$'
     line: '\1 fbcon=rotate:{{ kiosk_fbcon_rotate }}'
     backrefs: true
-  when: (cmdline_raw.content | b64decode) is not search('fbcon=rotate')
 
 - name: Enable and start kiosk service
   ansible.builtin.systemd:
