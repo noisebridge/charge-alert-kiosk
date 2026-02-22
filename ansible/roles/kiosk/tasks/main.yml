@@ -1,0 +1,75 @@
+---
+- name: Validate required credentials
+  ansible.builtin.assert:
+    that:
+      - kiosk_http_user is defined and kiosk_http_user | length > 0
+      - kiosk_http_pass is defined and kiosk_http_pass | length > 0
+    fail_msg: "kiosk_http_user and kiosk_http_pass must be set via -e"
+
+- name: Update apt cache and upgrade all packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+
+- name: Install kiosk packages
+  ansible.builtin.apt:
+    name:
+      - cage
+      - firefox
+      - wlr-randr
+    state: present
+
+- name: Ensure Firefox policies directory exists
+  ansible.builtin.file:
+    path: /etc/firefox/policies
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Firefox policies
+  ansible.builtin.template:
+    src: policies.json.j2
+    dest: /etc/firefox/policies/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Deploy kiosk script
+  ansible.builtin.template:
+    src: kiosk.sh.j2
+    dest: /home/{{ kiosk_user }}/kiosk.sh
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0755"
+  notify: Restart kiosk
+
+- name: Deploy kiosk systemd service
+  ansible.builtin.template:
+    src: kiosk.service.j2
+    dest: /etc/systemd/system/kiosk.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Read current cmdline.txt
+  ansible.builtin.slurp:
+    src: /boot/firmware/cmdline.txt
+  register: cmdline_raw
+
+- name: Ensure portrait boot console rotation in cmdline.txt
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^(.*)$'
+    line: '\1 fbcon=rotate:{{ kiosk_fbcon_rotate }}'
+    backrefs: true
+  when: (cmdline_raw.content | b64decode) is not search('fbcon=rotate')
+
+- name: Enable and start kiosk service
+  ansible.builtin.systemd:
+    name: kiosk
+    enabled: true
+    state: started
+    daemon_reload: true

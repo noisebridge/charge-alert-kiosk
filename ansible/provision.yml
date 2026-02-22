@@ -1,0 +1,5 @@
+---
+- name: Configure Pi 5 kiosk display
+  hosts: all
+  roles:
+    - kiosk

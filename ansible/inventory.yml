@@ -1,0 +1,6 @@
+all:
+  hosts:
+    charge-alerts2:
+      ansible_host: charge-alerts2.local
+    charge-alerts3:
+      ansible_host: charge-alerts3.local

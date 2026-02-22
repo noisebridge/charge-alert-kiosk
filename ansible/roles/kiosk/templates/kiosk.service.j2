@@ -1,0 +1,29 @@
+[Unit]
+Description=Kiosk Browser
+After=systemd-user-sessions.service
+After=network-online.target
+Wants=network-online.target
+Conflicts=getty@tty1.service
+
+[Service]
+User={{ kiosk_user }}
+Group={{ kiosk_user }}
+PAMName=login
+Type=simple
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+ExecStart=/home/{{ kiosk_user }}/kiosk.sh
+Restart=on-failure
+RestartSec=5
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=WLR_LIBINPUT_NO_DEVICES=1
+UtmpIdentifier=tty1
+UtmpMode=user
+
+# GPU access
+SupplementaryGroups=video render
+
+[Install]
+WantedBy=multi-user.target
