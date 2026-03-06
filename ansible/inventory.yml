@@ -1,10 +1,18 @@
 all:
   children:
-    kiosks:
+    charge_kiosks:
       hosts:
         charge-alerts1:
           ansible_host: charge-alerts1.local
+          ansible_ssh_private_key_file: ~/.ssh/charge-alerts
         charge-alerts2:
           ansible_host: charge-alerts2.local
+          ansible_ssh_private_key_file: ~/.ssh/charge-alerts
         charge-alerts3:
           ansible_host: charge-alerts3.local
+          ansible_ssh_private_key_file: ~/.ssh/charge-alerts
+    membership_kiosks:
+      hosts:
+        membership-alerts:
+          ansible_host: membership-alerts
+          ansible_ssh_private_key_file: ~/.ssh/membership-alerts

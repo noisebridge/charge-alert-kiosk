@@ -7,10 +7,8 @@
 - name: Install kiosk packages
   ansible.builtin.apt:
     name:
-      - cage
+      - sway
       - firefox
-      - wlr-randr
-      - wtype
     state: present
 
 - name: Ensure Firefox policies directory exists
@@ -27,6 +25,23 @@
     dest: /etc/firefox/policies/policies.json
     owner: root
     group: root
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Ensure sway config directory exists
+  ansible.builtin.file:
+    path: /home/{{ kiosk_user }}/.config/sway
+    state: directory
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0755"
+
+- name: Deploy sway config
+  ansible.builtin.template:
+    src: sway-config.j2
+    dest: /home/{{ kiosk_user }}/.config/sway/config
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
     mode: "0644"
   notify: Restart kiosk
 

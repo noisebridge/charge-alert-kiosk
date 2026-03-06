@@ -1,6 +1,6 @@
 ---
-- name: Configure Pi 5 kiosk display
-  hosts: kiosks
+- name: Configure charge alerts kiosk display
+  hosts: charge_kiosks
   pre_tasks:
     - name: Write SSH private key
       ansible.builtin.copy:
@@ -11,4 +11,4 @@
       become: false
       run_once: true
   roles:
-    - kiosk
+    - charge-kiosk

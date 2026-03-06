@@ -15,30 +15,38 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtWmsOI4jOl8Tjs3jb8qJRWzBEj8JBnM0bLohjblbx8
 
 ## Usage
 
-Provision a host:
+Provision a charge-alerts host:
 
 ```bash
 cd ansible
-ansible-playbook provision.yml --ask-vault-pass --limit charge-alerts2
+ansible-playbook charge-provision.yml --ask-vault-pass --limit charge-alerts2
+```
+
+Provision a membership-alerts host:
+
+```bash
+cd ansible
+ansible-playbook membership-provision.yml --ask-vault-pass
 ```
 
 Dry run (check mode):
 
 ```bash
 cd ansible
-ansible-playbook provision.yml --ask-vault-pass --limit charge-alerts2 --check --diff
+ansible-playbook charge-provision.yml --ask-vault-pass --limit charge-alerts2 --check --diff
 ```
 
-## Adding a new host
+## Adding a new charge-alerts host
 
 Add an entry to `ansible/inventory.yml`:
 
 ```yaml
 all:
   children:
-    kiosks:
+    charge_kiosks:
       hosts:
         # ...
         charge-alertsN:
           ansible_host: charge-alertsN.local
+          ansible_ssh_private_key_file: ~/.ssh/charge-alerts
 ```

@@ -1,0 +1,142 @@
+---
+- name: Update apt cache and upgrade all packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+
+- name: Install kiosk packages
+  ansible.builtin.apt:
+    name:
+      - sway
+      - firefox
+    state: present
+
+- name: Ensure Firefox policies directory exists
+  ansible.builtin.file:
+    path: /etc/firefox/policies
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Firefox policies
+  ansible.builtin.template:
+    src: policies.json.j2
+    dest: /etc/firefox/policies/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Find Firefox profile directory
+  ansible.builtin.find:
+    paths: /home/{{ kiosk_user }}/.config/mozilla/firefox
+    patterns: "*.default*"
+    file_type: directory
+  register: firefox_profile
+  become: false
+
+- name: Ensure Firefox chrome directory exists
+  ansible.builtin.file:
+    path: "{{ firefox_profile.files[0].path }}/chrome"
+    state: directory
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0755"
+  when: firefox_profile.files | length > 0
+
+- name: Deploy userChrome.css to hide Firefox UI
+  ansible.builtin.copy:
+    src: files/userChrome.css
+    dest: "{{ firefox_profile.files[0].path }}/chrome/userChrome.css"
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0644"
+  when: firefox_profile.files | length > 0
+  notify: Restart kiosk
+
+- name: Deploy coming soon page
+  ansible.builtin.copy:
+    src: files/coming-soon.html
+    dest: /home/{{ kiosk_user }}/coming-soon.html
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Ensure sway config directory exists
+  ansible.builtin.file:
+    path: /home/{{ kiosk_user }}/.config/sway
+    state: directory
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0755"
+
+- name: Deploy sway config
+  ansible.builtin.template:
+    src: sway-config.j2
+    dest: /home/{{ kiosk_user }}/.config/sway/config
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Deploy kiosk script
+  ansible.builtin.template:
+    src: kiosk.sh.j2
+    dest: /home/{{ kiosk_user }}/kiosk.sh
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0755"
+  notify: Restart kiosk
+
+- name: Deploy kiosk systemd service
+  ansible.builtin.template:
+    src: kiosk.service.j2
+    dest: /etc/systemd/system/kiosk.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart kiosk
+
+- name: Remove old fbcon value from cmdline.txt
+  ansible.builtin.replace:
+    path: /boot/firmware/cmdline.txt
+    regexp: '\s*fbcon=rotate:\S*'
+    replace: ''
+  changed_when: false
+
+- name: Append fbcon=rotate to cmdline.txt
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regexp: '^(.+)$'
+    line: '\1 fbcon=rotate:{{ kiosk_fbcon_rotate }}'
+    backrefs: true
+
+- name: Set CPU overclock frequency
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    regexp: '^#?arm_freq='
+    line: "arm_freq={{ kiosk_arm_freq }}"
+  notify: Reboot
+
+- name: Set GPU overclock frequency
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    regexp: '^#?gpu_freq='
+    line: "gpu_freq={{ kiosk_gpu_freq }}"
+  notify: Reboot
+
+- name: Set overclock voltage delta
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    regexp: '^#?over_voltage_delta='
+    line: "over_voltage_delta={{ kiosk_over_voltage_delta }}"
+  notify: Reboot
+
+- name: Enable and start kiosk service
+  ansible.builtin.systemd:
+    name: kiosk
+    enabled: true
+    state: started
+    daemon_reload: true
