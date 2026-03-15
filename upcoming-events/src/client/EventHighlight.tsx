@@ -26,33 +26,33 @@ export function EventHighlight({ event }: { event: MeetupEvent }) {
     description.length > 300 ? description.slice(0, 300) + "..." : description;
 
   return (
-    <div className="h-full flex p-6 gap-6">
+    <div className="highlight">
       {/* Image */}
       {event.imageUrl && (
-        <div className="w-1/2 h-full">
+        <div className="highlight-image-wrap">
           <img
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover rounded-2xl"
+            className="highlight-image"
           />
         </div>
       )}
 
       {/* Details */}
       <div
-        className={`${event.imageUrl ? "w-1/2" : "w-full"} flex flex-col justify-start overflow-hidden relative`}
+        className={`highlight-details ${event.imageUrl ? "highlight-details-half" : "highlight-details-full"}`}
       >
-        <div className="absolute top-0 right-0">
+        <div className="highlight-qr">
           <QRCodeSVG value={event.eventUrl} size={128} />
         </div>
-        <h1 className="text-5xl font-bold mb-4 text-black leading-tight pr-36">
+        <h1 className="highlight-title">
           {event.title}
         </h1>
-        <div className="text-2xl text-gray-700 mb-1">{formatDate(event.dateTime)}</div>
-        <div className="text-xl text-gray-500 mb-6">
+        <div className="highlight-date">{formatDate(event.dateTime)}</div>
+        <div className="highlight-time">
           {formatTime(event.dateTime)} &ndash; {formatTime(event.endTime)}
         </div>
-        <p className="text-lg text-gray-600 leading-relaxed whitespace-pre-line">
+        <p className="highlight-desc">
           {truncated}
         </p>
       </div>

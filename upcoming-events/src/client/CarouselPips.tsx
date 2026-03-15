@@ -13,12 +13,12 @@ export function CarouselPips({
   progress: number;
 }) {
   return (
-    <div className="flex justify-center items-center gap-3 py-3">
+    <div className="carousel-pips">
       {Array.from({ length: total }, (_, i) => {
         const isActive = i === activeIndex;
 
         return (
-          <div key={i} className="relative">
+          <div key={i} className="carousel-pip">
             <svg width={SIZE} height={SIZE}>
               {/* Background circle (inactive only) */}
               {!isActive && (

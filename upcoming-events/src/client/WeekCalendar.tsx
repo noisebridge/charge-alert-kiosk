@@ -22,16 +22,16 @@ function dateParts(date: Date) {
 }
 
 const EVENT_COLORS = [
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-indigo-500",
-  "bg-pink-500",
-  "bg-lime-500",
-  "bg-orange-500",
+  "#0ea5e9", // sky-500
+  "#10b981", // emerald-500
+  "#8b5cf6", // violet-500
+  "#f59e0b", // amber-500
+  "#f43f5e", // rose-500
+  "#14b8a6", // teal-500
+  "#6366f1", // indigo-500
+  "#ec4899", // pink-500
+  "#84cc16", // lime-500
+  "#f97316", // orange-500
 ];
 
 /** Returns 7 dates representing the next 7 Pacific-time calendar days (as YYYY-MM-DD strings for comparison) */
@@ -76,17 +76,17 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
   events.forEach((e) => getColorForTitle(e.title, colorMap));
 
   return (
-    <div className="bg-transparent border-t border-gray-300">
-      <div className="flex">
+    <div className="week-calendar">
+      <div className="week-calendar-grid">
         {/* Time gutter */}
-        <div className="w-12 flex-0">
-          <div className="h-10" /> {/* header spacer */}
-          <div className="relative" style={{ height: `${TOTAL_HOURS * 34}px` }}>
+        <div className="time-gutter">
+          <div className="time-gutter-spacer" /> {/* header spacer */}
+          <div className="time-gutter-body" style={{ height: `${TOTAL_HOURS * 34}px` }}>
             {Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => (
               <div
                 key={i}
-                className="absolute text-[11px] text-gray-400 -translate-y-1/2"
-                style={{ top: `${(i / TOTAL_HOURS) * 100}%`, right: 4 }}
+                className="time-label"
+                style={{ top: `${(i / TOTAL_HOURS) * 100}%` }}
               >
                 {((HOURS_START + i) % 12 || 12) +
                   (HOURS_START + i >= 12 ? "p" : "a")}
@@ -103,27 +103,25 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
           );
 
           return (
-            <div key={day.key} className="flex-1 border-l border-gray-300">
+            <div key={day.key} className="day-column">
               {/* Day header */}
               <div
-                className={`h-10 flex flex-col items-center justify-center text-sm ${
-                  isToday ? "text-black font-bold" : "text-gray-700"
-                }`}
+                className={`day-header ${isToday ? "day-header-today" : ""}`}
               >
-                <span className="font-semibold">{day.label.day}</span>
-                <span className="text-xs">{day.label.date}</span>
+                <span className="day-name">{day.label.day}</span>
+                <span className="day-date">{day.label.date}</span>
               </div>
 
               {/* Time grid */}
               <div
-                className="relative"
+                className="day-grid"
                 style={{ height: `${TOTAL_HOURS * 34}px` }}
               >
                 {/* Hour lines */}
                 {Array.from({ length: TOTAL_HOURS }, (_, i) => (
                   <div
                     key={i}
-                    className="absolute w-full border-t border-gray-300"
+                    className="hour-line"
                     style={{ top: `${(i / TOTAL_HOURS) * 100}%` }}
                   />
                 ))}
@@ -166,18 +164,19 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
                   return (
                     <div
                       key={event.id}
-                      className={`absolute rounded-sm ${color} overflow-hidden px-2 py-1.5`}
+                      className="event-bar"
                       style={{
                         top: `${topPct}%`,
                         height: `${Math.max(heightPct, 2)}%`,
                         left: hasOverlap ? (overlapIndex > 0 ? "50%" : "2px") : "2px",
                         right: hasOverlap ? (overlapIndex > 0 ? "2px" : "50%") : "2px",
+                        backgroundColor: color,
                       }}
                     >
-                      <span className="text-[11px] text-white font-semibold leading-tight block truncate">
+                      <span className="event-bar-title">
                         {event.title}
                       </span>
-                      <span className="text-[10px] text-white/80 leading-tight block truncate">
+                      <span className="event-bar-time">
                         {new Date(event.dateTime).toLocaleTimeString("en-US", {
                           hour: "numeric",
                           minute: "2-digit",

@@ -98,10 +98,10 @@ export function App() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white p-8">
-        <div className="max-w-2xl text-center">
-          <p className="text-red-600 text-2xl font-semibold mb-4">Failed to load events</p>
-          <pre className="text-left text-sm text-red-800 bg-red-50 rounded-lg p-4 overflow-auto whitespace-pre-wrap">{error}</pre>
+      <div className="error-container">
+        <div className="error-content">
+          <p className="error-title">Failed to load events</p>
+          <pre className="error-detail">{error}</pre>
         </div>
       </div>
     );
@@ -109,7 +109,7 @@ export function App() {
 
   if (events.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white text-gray-400 text-2xl">
+      <div className="loading-container">
         Loading events...
       </div>
     );
@@ -119,9 +119,9 @@ export function App() {
   const safeIndex = activeIndex % carouselEvents.length;
 
   return (
-    <div className="h-screen flex flex-col bg-white text-black">
+    <div className="app-layout">
       {/* Top: Event highlight carousel */}
-      <div className="flex-1 min-h-0 relative">
+      <div className="app-highlight">
         <EventHighlight event={carouselEvents[safeIndex]!} />
       </div>
 

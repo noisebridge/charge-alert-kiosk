@@ -57,7 +57,7 @@
 
 - name: Build upcoming-events binary
   ansible.builtin.command:
-    cmd: bun run build
+    cmd: bun run build:pi
     chdir: "{{ playbook_dir }}/../upcoming-events"
   delegate_to: localhost
   become: false
