@@ -1,4 +1,5 @@
 import type { MeetupEvent } from "../types";
+import { QRCodeSVG } from "qrcode.react";
 
 const TZ = "America/Los_Angeles";
 
@@ -39,9 +40,12 @@ export function EventHighlight({ event }: { event: MeetupEvent }) {
 
       {/* Details */}
       <div
-        className={`${event.imageUrl ? "w-1/2" : "w-full"} p-8 flex flex-col justify-center`}
+        className={`${event.imageUrl ? "w-1/2" : "w-full"} flex flex-col justify-start overflow-hidden relative`}
       >
-        <h1 className="text-5xl font-bold mb-4 text-black leading-tight">
+        <div className="absolute top-0 right-0">
+          <QRCodeSVG value={event.eventUrl} size={128} />
+        </div>
+        <h1 className="text-5xl font-bold mb-4 text-black leading-tight pr-36">
           {event.title}
         </h1>
         <div className="text-2xl text-gray-700 mb-1">{formatDate(event.dateTime)}</div>

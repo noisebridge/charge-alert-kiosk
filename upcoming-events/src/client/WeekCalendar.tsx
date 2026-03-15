@@ -81,7 +81,7 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
         {/* Time gutter */}
         <div className="w-12 flex-0">
           <div className="h-10" /> {/* header spacer */}
-          <div className="relative" style={{ height: `${TOTAL_HOURS * 28}px` }}>
+          <div className="relative" style={{ height: `${TOTAL_HOURS * 34}px` }}>
             {Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => (
               <div
                 key={i}
@@ -117,7 +117,7 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
               {/* Time grid */}
               <div
                 className="relative"
-                style={{ height: `${TOTAL_HOURS * 28}px` }}
+                style={{ height: `${TOTAL_HOURS * 34}px` }}
               >
                 {/* Hour lines */}
                 {Array.from({ length: TOTAL_HOURS }, (_, i) => (
@@ -176,6 +176,13 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
                     >
                       <span className="text-[11px] text-white font-semibold leading-tight block truncate">
                         {event.title}
+                      </span>
+                      <span className="text-[10px] text-white/80 leading-tight block truncate">
+                        {new Date(event.dateTime).toLocaleTimeString("en-US", {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          timeZone: TZ,
+                        })}
                       </span>
                     </div>
                   );
