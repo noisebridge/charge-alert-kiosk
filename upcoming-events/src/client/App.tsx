@@ -20,16 +20,22 @@ function getWeekEvents(events: MeetupEvent[]): MeetupEvent[] {
 
 export function App() {
   const [events, setEvents] = useState<MeetupEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
   const fetchEvents = useCallback(async () => {
     try {
       const res = await fetch("/api/events");
-      const data = (await res.json()) as MeetupEvent[];
-      setEvents(data);
+      const data: unknown = await res.json();
+      if (!res.ok && typeof data === "object" && data !== null && "error" in data) {
+        setError(String((data as { error: unknown }).error));
+        return;
+      }
+      setError(null);
+      setEvents(data as MeetupEvent[]);
     } catch (e) {
-      console.error("Failed to fetch events", e);
+      setError(e instanceof Error ? e.message : "Failed to fetch events");
     }
   }, []);
 
@@ -65,6 +71,17 @@ export function App() {
     animFrame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animFrame);
   }, [activeIndex, weekEvents.length]);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white p-8">
+        <div className="max-w-2xl text-center">
+          <p className="text-red-600 text-2xl font-semibold mb-4">Failed to load events</p>
+          <pre className="text-left text-sm text-red-800 bg-red-50 rounded-lg p-4 overflow-auto whitespace-pre-wrap">{error}</pre>
+        </div>
+      </div>
+    );
+  }
 
   if (events.length === 0) {
     return (

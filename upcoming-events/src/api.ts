@@ -1,4 +1,4 @@
-import type { MeetupEvent, MeetupEventNode } from "./types";
+import { type MeetupEvent, MeetupResponseSchema } from "./types";
 import removeMd from "remove-markdown";
 
 export async function fetchUpcomingEvents(): Promise<MeetupEvent[]> {
@@ -25,30 +25,33 @@ export async function fetchUpcomingEvents(): Promise<MeetupEvent[]> {
     }),
   });
 
-  const json = (await res.json()) as {
-    data?: { groupByUrlname?: { events?: { edges?: Array<{ node: MeetupEventNode }> } } };
-  };
-  const edges = json?.data?.groupByUrlname?.events?.edges ?? [];
+  const json: unknown = await res.json();
+  const parsed = MeetupResponseSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error(`Invalid Meetup API response: ${parsed.error.message}`);
+  }
 
-  return edges
-    .map((edge) => {
-      const node = edge.node;
-      if (node.status === "CANCELLED") return null;
+  const edges = parsed.data.data.groupByUrlname.events.edges;
 
-      const photo = node.featuredEventPhoto ?? node.displayPhoto;
-      const imageUrl = photo?.highResUrl;
+  const events: MeetupEvent[] = [];
+  for (const edge of edges) {
+    const node = edge.node;
+    if (node.status === "CANCELLED") continue;
 
-      const event: MeetupEvent = {
-        id: node.id,
-        title: node.title,
-        eventUrl: node.eventUrl,
-        description: removeMd(node.description ?? ""),
-        dateTime: node.dateTime,
-        endTime: node.endTime,
-        status: node.status,
-      };
-      if (imageUrl) event.imageUrl = imageUrl;
-      return event;
-    })
-    .filter(Boolean) as MeetupEvent[];
+    const photo = node.featuredEventPhoto ?? node.displayPhoto;
+    const imageUrl = photo?.highResUrl;
+
+    const event: MeetupEvent = {
+      id: node.id,
+      title: node.title,
+      eventUrl: node.eventUrl,
+      description: removeMd(node.description ?? ""),
+      dateTime: node.dateTime,
+      endTime: node.endTime,
+      status: node.status,
+    };
+    if (imageUrl) event.imageUrl = imageUrl;
+    events.push(event);
+  }
+  return events;
 }

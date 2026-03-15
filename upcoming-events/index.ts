@@ -6,8 +6,14 @@ Bun.serve({
   routes: {
     "/": homepage,
     "/api/events": async () => {
-      const events = await fetchUpcomingEvents();
-      return Response.json(events);
+      try {
+        const events = await fetchUpcomingEvents();
+        return Response.json(events);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Unknown error";
+        console.error("Failed to fetch events:", message);
+        return Response.json({ error: message }, { status: 502 });
+      }
     },
   },
   fetch(_req) {
