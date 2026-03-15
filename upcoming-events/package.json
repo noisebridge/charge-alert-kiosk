@@ -1,12 +1,12 @@
 {
   "name": "upcoming-events",
-  "module": "index.ts",
+  "module": "src/src/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --hot index.ts",
-    "start": "bun index.ts",
-    "build": "bun build --compile --target=bun-linux-arm64 --outfile=dist/upcoming-events ./index.ts",
+    "dev": "bun --hot src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build --compile --target=bun-linux-arm64 --outfile=dist/upcoming-events ./src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

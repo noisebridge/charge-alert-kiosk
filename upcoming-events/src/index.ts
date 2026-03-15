@@ -1,5 +1,5 @@
-import { fetchUpcomingEvents } from "./src/api";
-import homepage from "./public/index.html";
+import { fetchUpcomingEvents } from "./api";
+import homepage from "../public/index.html";
 
 Bun.serve({
   port: 3000,
