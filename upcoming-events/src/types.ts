@@ -8,7 +8,7 @@ const MeetupEventNodeSchema = z.object({
   dateTime: z.string(),
   endTime: z.string(),
   status: z.string(),
-  featuredEventPhoto: z.object({ highResUrl: z.string().optional() }).optional(),
+  featuredEventPhoto: z.union([z.object({ highResUrl: z.string().optional() }), z.undefined(), z.null()]),
   displayPhoto: z.object({ highResUrl: z.string().optional() }).optional(),
 });
 
