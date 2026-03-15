@@ -1,9 +1,12 @@
 import type { MeetupEvent } from "../types";
 
+const TZ = "America/Los_Angeles";
+
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: TZ,
   });
 }
 
@@ -12,6 +15,7 @@ function formatDate(dateStr: string): string {
     weekday: "long",
     month: "long",
     day: "numeric",
+    timeZone: TZ,
   });
 }
 

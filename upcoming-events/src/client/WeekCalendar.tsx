@@ -1,8 +1,25 @@
 import type { MeetupEvent } from "../types";
 
+const TZ = "America/Los_Angeles";
 const HOURS_START = 11; // 11 AM
 const HOURS_END = 23; // 11 PM
 const TOTAL_HOURS = HOURS_END - HOURS_START;
+
+/** Get the Pacific-time date parts for a Date object */
+function dateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return { year: get("year"), month: get("month"), day: get("day"), hour: get("hour"), minute: get("minute") };
+}
 
 const EVENT_COLORS = [
   "bg-sky-500",
@@ -17,31 +34,30 @@ const EVENT_COLORS = [
   "bg-orange-500",
 ];
 
-function getNext7Days(): Date[] {
-  const days: Date[] = [];
+/** Returns 7 dates representing the next 7 Pacific-time calendar days (as YYYY-MM-DD strings for comparison) */
+function getNext7Days(): { key: string; label: { day: string; date: string } }[] {
   const now = new Date();
+  const days: { key: string; label: { day: string; date: string } }[] = [];
   for (let i = 0; i < 7; i++) {
+    // Create a date at noon Pacific for the target day to avoid DST issues
     const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    d.setHours(0, 0, 0, 0);
-    days.push(d);
+    d.setDate(d.getDate() + i);
+    const p = dateParts(d);
+    const key = `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
+    days.push({
+      key,
+      label: {
+        day: d.toLocaleDateString("en-US", { weekday: "short", timeZone: TZ }),
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: TZ }),
+      },
+    });
   }
   return days;
 }
 
-function formatDayHeader(date: Date): { day: string; date: string } {
-  return {
-    day: date.toLocaleDateString("en-US", { weekday: "short" }),
-    date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-  };
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+function pacificDateKey(date: Date): string {
+  const p = dateParts(date);
+  return `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
 }
 
 // Assign a consistent color to each unique event title
@@ -80,23 +96,22 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
         </div>
 
         {/* Day columns */}
-        {days.map((day) => {
-          const header = formatDayHeader(day);
-          const isToday = isSameDay(day, new Date());
+        {days.map((day, dayIdx) => {
+          const isToday = dayIdx === 0;
           const dayEvents = events.filter((e) =>
-            isSameDay(new Date(e.dateTime), day)
+            pacificDateKey(new Date(e.dateTime)) === day.key
           );
 
           return (
-            <div key={day.toISOString()} className="flex-1 border-l border-gray-300">
+            <div key={day.key} className="flex-1 border-l border-gray-300">
               {/* Day header */}
               <div
                 className={`h-10 flex flex-col items-center justify-center text-sm ${
                   isToday ? "text-black font-bold" : "text-gray-700"
                 }`}
               >
-                <span className="font-semibold">{header.day}</span>
-                <span className="text-xs">{header.date}</span>
+                <span className="font-semibold">{day.label.day}</span>
+                <span className="text-xs">{day.label.date}</span>
               </div>
 
               {/* Time grid */}
@@ -115,11 +130,10 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
 
                 {/* Event bars */}
                 {dayEvents.map((event, idx) => {
-                  const start = new Date(event.dateTime);
-                  const end = new Date(event.endTime);
-                  const startHour =
-                    start.getHours() + start.getMinutes() / 60;
-                  const endHour = end.getHours() + end.getMinutes() / 60;
+                  const startParts = dateParts(new Date(event.dateTime));
+                  const endParts = dateParts(new Date(event.endTime));
+                  const startHour = startParts.hour + startParts.minute / 60;
+                  const endHour = endParts.hour + endParts.minute / 60;
 
                   const topPct =
                     ((startHour - HOURS_START) / TOTAL_HOURS) * 100;
@@ -129,20 +143,22 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
                   if (topPct < 0 || topPct > 100) return null;
 
                   // Check if this event overlaps with any earlier event in the same day
+                  const evStart = new Date(event.dateTime);
+                  const evEnd = new Date(event.endTime);
                   let overlapIndex = 0;
                   for (let j = 0; j < idx; j++) {
                     const other = dayEvents[j]!;
                     const otherStart = new Date(other.dateTime);
                     const otherEnd = new Date(other.endTime);
-                    if (start < otherEnd && end > otherStart) {
+                    if (evStart < otherEnd && evEnd > otherStart) {
                       overlapIndex++;
                       break;
                     }
                   }
                   const hasOverlap = overlapIndex > 0 || dayEvents.some((other, j) =>
                     j > idx &&
-                    start < new Date(other.endTime) &&
-                    end > new Date(other.dateTime)
+                    evStart < new Date(other.endTime) &&
+                    evEnd > new Date(other.dateTime)
                   );
 
                   const color = getColorForTitle(event.title, colorMap);

@@ -4,14 +4,25 @@ import { EventHighlight } from "./EventHighlight";
 import { WeekCalendar } from "./WeekCalendar";
 import { CarouselPips } from "./CarouselPips";
 
+const TZ = "America/Los_Angeles";
 const ROTATE_INTERVAL = 15_000; // 15 seconds per event
 const REFRESH_INTERVAL = 30 * 60_000; // 30 minutes
 
+/** Milliseconds until the next midnight in Pacific time */
+function msUntilMidnight(): number {
+  const now = new Date();
+  const pacific = new Date(now.toLocaleString("en-US", { timeZone: TZ }));
+  const midnight = new Date(pacific);
+  midnight.setDate(midnight.getDate() + 1);
+  midnight.setHours(0, 0, 0, 0);
+  return midnight.getTime() - pacific.getTime();
+}
+
 function getWeekEvents(events: MeetupEvent[]): MeetupEvent[] {
   const now = new Date();
+  // Get the Pacific-time date 7 days from now at end of day
   const weekEnd = new Date(now);
-  weekEnd.setDate(now.getDate() + 7);
-  weekEnd.setHours(23, 59, 59, 999);
+  weekEnd.setDate(weekEnd.getDate() + 7);
   return events.filter((e) => {
     const d = new Date(e.dateTime);
     return d >= now && d <= weekEnd;
@@ -46,6 +57,19 @@ export function App() {
     fetchEvents();
     const id = setInterval(fetchEvents, REFRESH_INTERVAL);
     return () => clearInterval(id);
+  }, [fetchEvents]);
+
+  // Refresh at Pacific midnight, then schedule the next midnight
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const scheduleNext = () => {
+      timeout = setTimeout(() => {
+        fetchEvents();
+        scheduleNext();
+      }, msUntilMidnight());
+    };
+    scheduleNext();
+    return () => clearTimeout(timeout);
   }, [fetchEvents]);
 
   // Rotate through events every 15 seconds
