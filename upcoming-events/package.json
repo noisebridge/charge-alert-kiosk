@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun --hot index.ts",
     "start": "bun index.ts",
+    "build": "bun build --compile --target=bun-linux-arm64 --outfile=dist/upcoming-events ./index.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
