@@ -1,0 +1,13 @@
+[Unit]
+Description=Upcoming Events Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/upcoming-events
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

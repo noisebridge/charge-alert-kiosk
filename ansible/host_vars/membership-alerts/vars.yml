@@ -1,5 +1,5 @@
 ---
-kiosk_url: "file:///home/noisebridge/coming-soon.html"
+kiosk_url: "http://localhost:3000"
 kiosk_display_transform: "normal"
 kiosk_fbcon_rotate: "0"
 kiosk_display_output: HDMI-A-1

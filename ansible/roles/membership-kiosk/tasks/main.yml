@@ -55,14 +55,39 @@
   when: firefox_profile.files | length > 0
   notify: Restart kiosk
 
-- name: Deploy coming soon page
+- name: Build upcoming-events binary
+  ansible.builtin.command:
+    cmd: bun run build
+    chdir: "{{ playbook_dir }}/../upcoming-events"
+  delegate_to: localhost
+  become: false
+  register: upcoming_events_build
+  changed_when: upcoming_events_build.rc == 0
+
+- name: Copy upcoming-events binary
   ansible.builtin.copy:
-    src: files/coming-soon.html
-    dest: /home/{{ kiosk_user }}/coming-soon.html
-    owner: "{{ kiosk_user }}"
-    group: "{{ kiosk_user }}"
+    src: "{{ playbook_dir }}/../upcoming-events/dist/upcoming-events"
+    dest: /usr/local/bin/upcoming-events
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart upcoming-events
+
+- name: Deploy upcoming-events systemd service
+  ansible.builtin.template:
+    src: upcoming-events.service.j2
+    dest: /etc/systemd/system/upcoming-events.service
+    owner: root
+    group: root
     mode: "0644"
-  notify: Restart kiosk
+  notify: Restart upcoming-events
+
+- name: Enable and start upcoming-events
+  ansible.builtin.systemd:
+    name: upcoming-events
+    enabled: true
+    state: started
+    daemon_reload: true
 
 - name: Ensure sway config directory exists
   ansible.builtin.file:
