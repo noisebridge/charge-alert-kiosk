@@ -18,6 +18,7 @@ body {
   flex: 1 1 0%;
   min-height: 0;
   position: relative;
+  width: 100%;
 }
 
 /* ── Error & loading states ── */
@@ -70,8 +71,9 @@ body {
 .highlight {
   height: 100%;
   display: flex;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 0 1.5rem;
   gap: 1.5rem;
+  box-sizing: border-box;
 }
 
 .highlight-image-wrap {
@@ -112,6 +114,7 @@ body {
   font-size: 3rem;
   line-height: 1.25;
   font-weight: 700;
+  margin-top: 0;
   margin-bottom: 1rem;
   color: #000000;
   padding-right: 9rem;
@@ -140,12 +143,14 @@ body {
 
 /* ── CarouselPips ── */
 .carousel-pips {
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.75rem;
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+  box-sizing: border-box;
 }
 
 .carousel-pip {
@@ -154,6 +159,7 @@ body {
 
 /* ── WeekCalendar ── */
 .week-calendar {
+  width: 100%;
   background-color: transparent;
   border-top: 1px solid #d1d5db;
 }
@@ -225,7 +231,7 @@ body {
 
 .event-bar {
   position: absolute;
-  border-radius: 0.125rem;
+  border-radius: 0.375rem;
   overflow: hidden;
   padding: 0.375rem 0.5rem;
 }

@@ -37,7 +37,7 @@ export function CarouselPips({
                   cy={SIZE / 2}
                   r={RADIUS}
                   fill="rgb(229, 231, 235)"
-                  stroke="rgb(156, 163, 175)"
+                  stroke="#2563eb"
                   strokeWidth={STROKE}
                   strokeDasharray={CIRCUMFERENCE}
                   strokeDashoffset={CIRCUMFERENCE * (1 - progress)}

@@ -18,14 +18,23 @@ function msUntilMidnight(): number {
   return midnight.getTime() - pacific.getTime();
 }
 
+function pacificMidnightToday(): Date {
+  // Get today's date in Pacific time
+  const formatter = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+  const dateStr = formatter.format(new Date()); // "YYYY-MM-DD"
+  // Parse as local, then adjust: find the UTC time when it's midnight in Pacific
+  const local = new Date(`${dateStr}T00:00:00`);
+  const inPacific = new Date(local.toLocaleString("en-US", { timeZone: TZ }));
+  return new Date(local.getTime() + (local.getTime() - inPacific.getTime()));
+}
+
 function getWeekEvents(events: MeetupEvent[]): MeetupEvent[] {
-  const now = new Date();
-  // Get the Pacific-time date 7 days from now at end of day
-  const weekEnd = new Date(now);
-  weekEnd.setDate(weekEnd.getDate() + 7);
+  const start = pacificMidnightToday();
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+
   return events.filter((e) => {
     const d = new Date(e.dateTime);
-    return d >= now && d <= weekEnd;
+    return d >= start && d <= end;
   });
 }
 
@@ -133,7 +142,7 @@ export function App() {
       />
 
       {/* Bottom: Week calendar */}
-      <WeekCalendar events={events} />
+      <WeekCalendar events={events} activeEventId={carouselEvents[safeIndex]?.id} />
     </div>
   );
 }

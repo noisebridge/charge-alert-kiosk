@@ -68,7 +68,7 @@ function getColorForTitle(title: string, colorMap: Map<string, string>): string 
   return colorMap.get(title)!;
 }
 
-export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
+export function WeekCalendar({ events, activeEventId }: { events: MeetupEvent[]; activeEventId?: string }) {
   const days = getNext7Days();
   const colorMap = new Map<string, string>();
 
@@ -81,7 +81,7 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
         {/* Time gutter */}
         <div className="time-gutter">
           <div className="time-gutter-spacer" /> {/* header spacer */}
-          <div className="time-gutter-body" style={{ height: `${TOTAL_HOURS * 34}px` }}>
+          <div className="time-gutter-body" style={{ height: `${TOTAL_HOURS * 30}px` }}>
             {Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => (
               <div
                 key={i}
@@ -115,7 +115,7 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
               {/* Time grid */}
               <div
                 className="day-grid"
-                style={{ height: `${TOTAL_HOURS * 34}px` }}
+                style={{ height: `${TOTAL_HOURS * 30}px` }}
               >
                 {/* Hour lines */}
                 {Array.from({ length: TOTAL_HOURS }, (_, i) => (
@@ -171,6 +171,8 @@ export function WeekCalendar({ events }: { events: MeetupEvent[] }) {
                         left: hasOverlap ? (overlapIndex > 0 ? "50%" : "2px") : "2px",
                         right: hasOverlap ? (overlapIndex > 0 ? "2px" : "50%") : "2px",
                         backgroundColor: color,
+                        border: event.id === activeEventId ? "3px solid #2563eb" : "3px solid transparent",
+                        boxSizing: "border-box" as const,
                       }}
                     >
                       <span className="event-bar-title">

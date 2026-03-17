@@ -20,10 +20,25 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function isToday(dateStr: string): boolean {
+  const now = new Date();
+  const nowDate = now.toLocaleDateString("en-US", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+  const eventDate = new Date(dateStr).toLocaleDateString("en-US", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+  return nowDate === eventDate;
+}
+
+function isHappeningNow(startStr: string, endStr: string): boolean {
+  const now = new Date();
+  return now >= new Date(startStr) && now <= new Date(endStr);
+}
+
 export function EventHighlight({ event }: { event: MeetupEvent }) {
   const description = event.description;
   const truncated =
     description.length > 300 ? description.slice(0, 300) + "..." : description;
+
+  const happeningNow = isHappeningNow(event.dateTime, event.endTime);
+  const today = isToday(event.dateTime);
 
   return (
     <div className="highlight">
@@ -48,9 +63,11 @@ export function EventHighlight({ event }: { event: MeetupEvent }) {
         <h1 className="highlight-title">
           {event.title}
         </h1>
-        <div className="highlight-date">{formatDate(event.dateTime)}</div>
+        <div className="highlight-date">{today ? "Today" : formatDate(event.dateTime)}</div>
         <div className="highlight-time">
-          {formatTime(event.dateTime)} &ndash; {formatTime(event.endTime)}
+          {happeningNow
+            ? "Right Now!"
+            : <>{formatTime(event.dateTime)} &ndash; {formatTime(event.endTime)}</>}
         </div>
         <p className="highlight-desc">
           {truncated}
