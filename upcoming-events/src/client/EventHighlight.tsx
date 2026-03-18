@@ -58,7 +58,8 @@ export function EventHighlight({ event }: { event: MeetupEvent }) {
         className={`highlight-details ${event.imageUrl ? "highlight-details-half" : "highlight-details-full"}`}
       >
         <div className="highlight-qr">
-          <QRCodeSVG value={event.eventUrl} size={128} />
+          <QRCodeSVG value={event.eventUrl} size={144} fgColor="#ffffff" bgColor="#000000" />
+          <span className="highlight-qr-label">Scan to Sign Up</span>
         </div>
         <h1 className="highlight-title">
           {event.title}
