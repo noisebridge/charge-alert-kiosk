@@ -38,6 +38,9 @@ function getWeekEvents(events: MeetupEvent[]): MeetupEvent[] {
   });
 }
 
+const MAX_RETRIES = 3;
+const BASE_DELAY = 1_000; // 1 second
+
 export function App() {
   const [events, setEvents] = useState<MeetupEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -45,17 +48,29 @@ export function App() {
   const [progress, setProgress] = useState(0);
 
   const fetchEvents = useCallback(async () => {
-    try {
-      const res = await fetch("/api/events");
-      const data: unknown = await res.json();
-      if (!res.ok && typeof data === "object" && data !== null && "error" in data) {
-        setError(String((data as { error: unknown }).error));
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetch("/api/events");
+        const data: unknown = await res.json();
+        if (!res.ok && typeof data === "object" && data !== null && "error" in data) {
+          const msg = String((data as { error: unknown }).error);
+          if (attempt < MAX_RETRIES - 1) {
+            await new Promise((r) => setTimeout(r, BASE_DELAY * 2 ** attempt));
+            continue;
+          }
+          setError(msg);
+          return;
+        }
+        setError(null);
+        setEvents(data as MeetupEvent[]);
         return;
+      } catch (e) {
+        if (attempt < MAX_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, BASE_DELAY * 2 ** attempt));
+          continue;
+        }
+        setError(e instanceof Error ? e.message : "Failed to fetch events");
       }
-      setError(null);
-      setEvents(data as MeetupEvent[]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch events");
     }
   }, []);
 
@@ -105,7 +120,7 @@ export function App() {
     return () => cancelAnimationFrame(animFrame);
   }, [activeIndex, weekEvents.length]);
 
-  if (error) {
+  if (error && events.length === 0) {
     return (
       <div className="error-container">
         <div className="error-content">
@@ -129,6 +144,13 @@ export function App() {
 
   return (
     <div className="app-layout">
+      {error && (
+        <div className="error-banner">
+          <p className="error-title">Failed to refresh events</p>
+          <pre className="error-detail">{error}</pre>
+        </div>
+      )}
+
       {/* Top: Event highlight carousel */}
       <div className="app-highlight">
         <EventHighlight event={carouselEvents[safeIndex]!} />

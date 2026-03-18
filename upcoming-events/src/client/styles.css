@@ -56,6 +56,23 @@ body {
   white-space: pre-wrap;
 }
 
+.error-banner {
+  background-color: #fef2f2;
+  padding: 0.75rem 1.5rem;
+  text-align: center;
+}
+
+.error-banner .error-title {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.error-banner .error-detail {
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  margin: 0;
+}
+
 .loading-container {
   display: flex;
   align-items: center;
