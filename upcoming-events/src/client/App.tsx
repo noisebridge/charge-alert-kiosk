@@ -164,7 +164,7 @@ export function App() {
       />
 
       {/* Bottom: Week calendar */}
-      <WeekCalendar events={events} activeEventId={carouselEvents[safeIndex]?.id} />
+      <WeekCalendar events={events} activeEventId={carouselEvents[safeIndex]!.id} />
     </div>
   );
 }

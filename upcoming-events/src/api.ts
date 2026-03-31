@@ -4,7 +4,7 @@ import removeMd from "remove-markdown";
 export async function fetchUpcomingEvents(): Promise<MeetupEvent[]> {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
-  const now = startOfDay.toISOString();
+
   const res = await fetch("https://www.meetup.com/gql2", {
     method: "POST",
     headers: {
@@ -15,7 +15,7 @@ export async function fetchUpcomingEvents(): Promise<MeetupEvent[]> {
       operationName: "getUpcomingGroupEvents",
       variables: {
         urlname: "noisebridge",
-        afterDateTime: now,
+        afterDateTime: startOfDay.toISOString(),
       },
       extensions: {
         persistedQuery: {
