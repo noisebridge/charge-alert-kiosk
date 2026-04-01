@@ -2,10 +2,12 @@
  * WS2812 LED driver via SPI (/dev/spidev0.0).
  * Works on Raspberry Pi 5 (no rpi_ws281x dependency).
  *
- * SPI at 2.5 MHz: each SPI bit = 0.4µs.
- * Each WS2812 bit is encoded as 3 SPI bits (1.2µs ≈ 1.25µs):
- *   WS2812 "0" → 0b100   (high 0.4µs, low 0.8µs)
- *   WS2812 "1" → 0b110   (high 0.8µs, low 0.4µs)
+ * SPI at 6.4 MHz: each SPI bit ≈ 156ns.
+ * Each WS2812 bit is encoded as 8 SPI bits (1 byte, ~1.25µs):
+ *   WS2812 "0" → 0b11000000 (0xC0)  T0H≈312ns, T0L≈938ns
+ *   WS2812 "1" → 0b11110000 (0xF0)  T1H≈625ns, T1L≈625ns
+ *
+ * One WS2812 bit per SPI byte — no bit ever straddles a byte boundary.
  *
  * Compile on the Pi:
  *   gcc -shared -o libneopixel.so -fPIC neopixel.c
@@ -26,19 +28,15 @@ static uint32_t *pixels = NULL;
 static uint8_t *spi_buf = NULL;
 static int spi_buf_len = 0;
 
-#define SPI_SPEED   2500000
-#define RESET_BYTES 80  /* >50µs of low at 2.5 MHz */
+#define SPI_SPEED   6400000
+#define RESET_BYTES 64  /* ~80µs of low at 6.4 MHz */
 
-/* Encode one color byte (8 WS2812 bits) into 3 SPI bytes (24 SPI bits). */
+/* Encode one color byte (8 WS2812 bits) into 8 SPI bytes.
+ * Each WS2812 bit = one SPI byte: "0" → 0xC0, "1" → 0xF8 */
 static void encode_byte(uint8_t byte, uint8_t *out) {
-    uint32_t enc = 0;
     for (int i = 7; i >= 0; i--) {
-        enc <<= 3;
-        enc |= (byte & (1 << i)) ? 0x6 : 0x4;  /* 0b110 or 0b100 */
+        out[7 - i] = (byte & (1 << i)) ? 0xF8 : 0xC0;
     }
-    out[0] = (enc >> 16) & 0xFF;
-    out[1] = (enc >> 8) & 0xFF;
-    out[2] = enc & 0xFF;
 }
 
 int neopixel_init(int num_leds, int brightness) {
@@ -56,8 +54,8 @@ int neopixel_init(int num_leds, int brightness) {
     led_count = num_leds;
     led_brightness = brightness;
     pixels = (uint32_t *)calloc(num_leds, sizeof(uint32_t));
-    /* 9 SPI bytes per LED (3 color bytes × 3 SPI bytes) + reset padding */
-    spi_buf_len = num_leds * 9 + RESET_BYTES;
+    /* reset + 24 SPI bytes per LED (3 color bytes × 8 SPI bytes) + reset */
+    spi_buf_len = RESET_BYTES + num_leds * 24 + RESET_BYTES;
     spi_buf = (uint8_t *)calloc(spi_buf_len, 1);
 
     if (!pixels || !spi_buf) goto fail;
@@ -95,7 +93,9 @@ void neopixel_set_brightness(int brightness) {
 int neopixel_render(void) {
     if (!initialized) return -1;
 
-    uint8_t *p = spi_buf;
+    /* Leading reset (zeros from calloc/previous render) */
+    memset(spi_buf, 0, RESET_BYTES);
+    uint8_t *p = spi_buf + RESET_BYTES;
     for (int i = 0; i < led_count; i++) {
         uint32_t c = pixels[i];
         uint8_t r = (c >> 16) & 0xFF;
@@ -108,11 +108,11 @@ int neopixel_render(void) {
         b = (uint8_t)((b * led_brightness) >> 8);
 
         /* WS2812 expects GRB order */
-        encode_byte(g, p); p += 3;
-        encode_byte(r, p); p += 3;
-        encode_byte(b, p); p += 3;
+        encode_byte(g, p); p += 8;
+        encode_byte(r, p); p += 8;
+        encode_byte(b, p); p += 8;
     }
-    /* Reset bytes are already zeroed from calloc / previous render */
+    /* Trailing reset */
     memset(p, 0, RESET_BYTES);
 
     int written = write(spi_fd, spi_buf, spi_buf_len);
