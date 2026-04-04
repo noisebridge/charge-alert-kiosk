@@ -8,6 +8,7 @@
   ansible.builtin.apt:
     name:
       - cage
+      - curl
       - firefox
       - wlr-randr
       - wtype
@@ -89,6 +90,14 @@
     enabled: true
     state: started
     daemon_reload: true
+
+- name: Schedule daily reboot at 4am
+  ansible.builtin.cron:
+    name: "Daily reboot"
+    minute: "0"
+    hour: "4"
+    job: "/sbin/reboot"
+    user: root
 
 - name: Enable SPI
   ansible.builtin.lineinfile:
