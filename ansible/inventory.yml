@@ -11,6 +11,9 @@ all:
         charge-alerts3:
           ansible_host: charge-alerts3.local
           ansible_ssh_private_key_file: ~/.ssh/charge-alerts
+        charge-alerts4:
+          ansible_host: charge-alerts4.local
+          ansible_ssh_private_key_file: ~/.ssh/charge-alerts
     membership_kiosks:
       hosts:
         membership-alerts:
